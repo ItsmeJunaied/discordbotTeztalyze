@@ -35,8 +35,8 @@ if (!process.env.GUILD_ID) {
     try {
         console.log('Registering commands...');
         console.log('Discord Token:', process.env.DISCORD_TOKEN);
-console.log('Client ID:', process.env.CLIENT_ID);
-console.log('Guild ID:', process.env.GUILD_ID);
+        console.log('Client ID:', process.env.CLIENT_ID);
+        console.log('Guild ID:', process.env.GUILD_ID);
 
         await rest.put(
             Routes.applicationGuildCommands(process.env.CLIENT_ID!, process.env.GUILD_ID!),
