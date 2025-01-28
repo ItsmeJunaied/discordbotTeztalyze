@@ -1,5 +1,16 @@
 /* eslint-disable prettier/prettier */
-import { Client, GatewayIntentBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, InteractionType, TextChannel } from 'discord.js';
+import {
+  Client,
+  GatewayIntentBits,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  InteractionType,
+  TextChannel,
+  TextInputBuilder,
+  ModalBuilder,
+  TextInputStyle,
+} from 'discord.js';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as dotenv from 'dotenv';
 
@@ -40,40 +51,101 @@ export class BotService implements OnModuleInit {
           const { commandName } = interaction;
 
           if (commandName === 'capture') {
-            const userMessage = interaction.options.get('message')?.value as string;
+            let userMessage = interaction.options.get('message')?.value as string;
 
-            // Create a button
-            const button = new ButtonBuilder()
+            // Create Send, Cancel, and Edit buttons
+            const sendButton = new ButtonBuilder()
               .setCustomId('send_message')
               .setLabel('Send')
               .setStyle(ButtonStyle.Primary);
 
-            const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
+            const cancelButton = new ButtonBuilder()
+              .setCustomId('cancel_message')
+              .setLabel('Cancel')
+              .setStyle(ButtonStyle.Danger);
 
-            // Respond with the message and a button
+            const editButton = new ButtonBuilder()
+              .setCustomId('edit_message')
+              .setLabel('Edit')
+              .setStyle(ButtonStyle.Secondary);
+
+            const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+              sendButton,
+              editButton,
+              cancelButton
+            );
+
+            // Respond with the message and buttons
             await interaction.reply({
-              content: `Hello - this is your message: "${userMessage}"`,
+              content: `${userMessage}`,
               components: [row],
-              ephemeral: true, // Only visible to the command user
+              ephemeral: true, 
             });
 
-            // Save the message for button interaction handling
-            this.client.once('interactionCreate', async (buttonInteraction) => {
-              if (
-                buttonInteraction.isButton() &&
-                buttonInteraction.customId === 'send_message'
-              ) {
-                // Respond to the button interaction
+            // Handle button interactions
+            this.client.on('interactionCreate', async (buttonInteraction) => {
+              if (!buttonInteraction.isButton()) return;
+
+              // Handle Send button
+              if (buttonInteraction.customId === 'send_message') {
                 await buttonInteraction.reply({
-                  content: `Message sent on behalf of ${buttonInteraction.user.username}: "${userMessage}"`,
+                  content: `${userMessage}`,
+                  // ephemeral: true,
                 });
 
-                // Send the message as the bot (indicating it's from the user)
                 if (interaction.channel?.isTextBased()) {
                   await (interaction.channel as TextChannel).send(
                     `**${buttonInteraction.user.username} says:** ${userMessage}`
                   );
                 }
+              }
+
+              // Handle Cancel button
+              if (buttonInteraction.customId === 'cancel_message') {
+                // Delete the original bot response
+                await interaction.deleteReply();
+              }
+
+              // Handle Edit button
+              if (buttonInteraction.customId === 'edit_message') {
+                // Create a modal for editing the message
+                const modal = new ModalBuilder()
+                  .setCustomId('edit_message_modal')
+                  .setTitle('Edit Your Message');
+
+                const messageInput = new TextInputBuilder()
+                  .setCustomId('new_message_input')
+                  .setLabel('Enter your new message')
+                  .setStyle(TextInputStyle.Paragraph)
+                  .setPlaceholder('Type your message here...')
+                  .setValue(userMessage)
+                  .setRequired(true);
+
+                const modalRow = new ActionRowBuilder<TextInputBuilder>().addComponents(messageInput);
+
+                modal.addComponents(modalRow);
+
+                // Show the modal to the user
+                await buttonInteraction.showModal(modal);
+              }
+            });
+
+            // Handle modal submissions
+            this.client.on('interactionCreate', async (modalInteraction) => {
+              if (!modalInteraction.isModalSubmit()) return;
+
+              if (modalInteraction.customId === 'edit_message_modal') {
+                const newMessage = modalInteraction.fields.getTextInputValue('new_message_input');
+
+                // Update the interaction with the new message and buttons
+                await modalInteraction.reply({
+                  content: ` ${newMessage}`,
+                  components: [row],
+                  ephemeral: true,
+                });
+
+                // Update the userMessage variable for further actions
+                userMessage = newMessage;
               }
             });
           }

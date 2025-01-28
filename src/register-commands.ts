@@ -17,7 +17,7 @@ const commands = [
     },
 ];
 
-console.log('Discord Token:', process.env.DISCORD_TOKEN);
+// console.log('Discord Token:', process.env.DISCORD_TOKEN);
 if (!process.env.DISCORD_TOKEN) {
     throw new Error('DISCORD_TOKEN is not defined');
 }
