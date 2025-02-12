@@ -139,29 +139,18 @@ export class BotService implements OnModuleInit {
             }
           }
 
-          if (customId === 'copy_message') {
-            const correctedMessage = interaction.message.content.replace('Corrected Message:\n', '');
-          
-            // Show a modal to paste the corrected message automatically into the input field
-            const modal = new ModalBuilder()
-              .setCustomId('edit_message_modal')
-              .setTitle('Edit Your Message');
-          
-            const messageInput = new TextInputBuilder()
-              .setCustomId('new_message_input')
-              .setLabel('Enter your new message')
-              .setStyle(TextInputStyle.Paragraph)
-              .setPlaceholder('Type your message here...')
-              .setValue(correctedMessage) // Pre-fill with corrected message
-              .setRequired(true);
-          
-            const modalRow = new ActionRowBuilder<TextInputBuilder>().addComponents(messageInput);
-          
-            modal.addComponents(modalRow);
-          
-            await interaction.showModal(modal);
-          }
-          
+          // Handle "Copy Message" button
+// Handle "Copy Message" button
+if (customId === 'copy_message') {
+  const correctedMessage = interaction.message.content.replace('Corrected Message:\n', '');
+  
+  await interaction.reply({
+    content: `📋 **Copy the corrected message below and paste it manually:**\n\`\`\`${correctedMessage}\`\`\``,
+    ephemeral: true,
+  });
+}
+
+
 
           // if (customId === 'cancel_message') {
           //   try {
