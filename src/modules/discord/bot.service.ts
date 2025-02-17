@@ -59,6 +59,13 @@ export class BotService implements OnModuleInit {
             await interaction.deferReply({ ephemeral: true });
 
             const originalMessage = interaction.options.get('message')?.value as string;
+            if (originalMessage.length > 2000) {
+              await interaction.editReply({
+                content: `❌ Your message exceeds the 2000-character limit. Your current character count: ${originalMessage.length}`,
+              });
+              return;
+            }
+            
 
             let correctedMessage = originalMessage;
 
