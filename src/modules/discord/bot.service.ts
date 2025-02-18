@@ -59,13 +59,27 @@ export class BotService implements OnModuleInit {
             await interaction.deferReply({ ephemeral: true });
 
             const originalMessage = interaction.options.get('message')?.value as string;
-            if (originalMessage.length > 2000) {
+
+            // Function to check if a message is mostly English
+            function isEnglish(text: string): boolean {
+              const englishChars = text.match(/[a-zA-Z0-9\s.,!?'"()]/g) || []; 
+              return englishChars.length / text.length > 0.8; 
+            }
+
+ 
+            const messageLength = [...originalMessage].length;
+
+            const charLimit = isEnglish(originalMessage) ? 2000 : 1000;
+
+            if (messageLength > charLimit) {
               await interaction.editReply({
-                content: `❌ Your message exceeds the 2000-character limit. Your current character count: ${originalMessage.length}`,
+                content: `❌ Your message exceeds the ${charLimit}-character limit.\n(English Limit: 2000, Non-English Limit: 1000)\nYour current character count: ${messageLength}`,
               });
               return;
             }
-            
+
+
+
 
             let correctedMessage = originalMessage;
 
@@ -147,15 +161,15 @@ export class BotService implements OnModuleInit {
           }
 
           // Handle "Copy Message" button
-// Handle "Copy Message" button
-if (customId === 'copy_message') {
-  const correctedMessage = interaction.message.content.replace('Corrected Message:\n', '');
-  
-  await interaction.reply({
-    content: `📋 **Copy the corrected message below and paste it manually:**\n\`\`\`${correctedMessage}\`\`\``,
-    ephemeral: true,
-  });
-}
+          // Handle "Copy Message" button
+          if (customId === 'copy_message') {
+            const correctedMessage = interaction.message.content.replace('Corrected Message:\n', '');
+
+            await interaction.reply({
+              content: `📋 **Copy the corrected message below and paste it manually:**\n\`\`\`${correctedMessage}\`\`\``,
+              ephemeral: true,
+            });
+          }
 
 
 
